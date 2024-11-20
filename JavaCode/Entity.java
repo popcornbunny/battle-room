@@ -1,3 +1,7 @@
+package JavaCode;
+
+import java.io.IOException;
+import java.net.*;
 
 public class Entity
 {
@@ -118,4 +122,23 @@ public class Entity
 			health = 0;
 	}
 
+	public static void main(String[] args) throws IOException {
+
+		// Create a socket to send data to the server.
+		DatagramSocket socket = new DatagramSocket();
+		InetAddress address = InetAddress.getByName("localhost");;
+		byte[] buf;
+
+		//sends "join" message to the server
+		String message = "join";
+		buf = message.getBytes();
+		DatagramPacket packet = new DatagramPacket(buf, buf.length, address, 4445);
+		socket.send(packet);
+
+		//receives confirmation message from server
+		packet = new DatagramPacket(buf, buf.length);
+		socket.receive(packet);
+		String received = new String(packet.getData(), 0, packet.getLength());
+		System.out.println(received);
+	}
 }

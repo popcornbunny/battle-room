@@ -1,3 +1,10 @@
+package JavaCode;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 /**
@@ -7,6 +14,13 @@ import java.util.ArrayList;
  */
 public class Room extends Thread
 {
+	/*
+	Server variables
+	 */
+	private DatagramSocket socket;
+	private byte[] buf = new byte[1024];
+
+
 	private ArrayList<Entity> creatures = new ArrayList<Entity>();
 	private ArrayList<Entity> players = new ArrayList<Entity>();
 	private ArrayList<String> messages = new ArrayList<String>();
@@ -48,7 +62,8 @@ public class Room extends Thread
 		}
 			
 	}
-	
+
+  //will have to rework to print to clients
 	private void printMessages()
 	{
 		while (messages.size() > 0)
@@ -84,13 +99,43 @@ public class Room extends Thread
 			}
 		}
 	}
-	
+
 	public void run()
 	{
+		System.out.println("Room started.");
 		long startTime = System.currentTimeMillis();
 		long lastSpawnCheck = startTime;
+
+		// Create the socket for the server.
+		try {
+			socket = new DatagramSocket(4445);
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
+
 		while (run)
 		{
+			try
+			{
+				//receives "join" message from client, does nothing with it
+				DatagramPacket packet = new DatagramPacket(buf, buf.length);
+				socket.receive(packet);
+
+				System.out.println("Received join message from client.");
+				InetAddress address = packet.getAddress();
+				int port = packet.getPort();
+
+				//sends confirmation message to client
+				String message = "Welcome to the Battle Room!";
+				buf = message.getBytes();
+				packet = new DatagramPacket(buf, buf.length, address, port);
+				socket.send(packet);
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+
 			presentTime = System.currentTimeMillis();
 			if ((presentTime - lastSpawnCheck) > check_spawn)
 			{
@@ -104,13 +149,14 @@ public class Room extends Thread
 				}
 				lastSpawnCheck = presentTime;
 			}
-			
+
 			processActions(players,creatures);
 			processActions(creatures,players);
-			
+
 			updateCreatureAction();
 			printMessages();
 		}
+		socket.close();
 	}
 	
 	public void setRun(boolean value)
@@ -134,6 +180,12 @@ public class Room extends Thread
 					creature.setAction(0); // If can't attack or heal just defend.
 			}
 		}
+	}
+
+	public static void main(String[] args)
+	{
+		Room room = new Room(0.05,1000);
+		room.start();
 	}
 
 }
