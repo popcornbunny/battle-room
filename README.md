@@ -26,13 +26,20 @@ For this you will have a server application in Java, C, or Python.  The server w
 
 ### Each hero and enemy have the following information:
 
-Name: A string that is used to identify the hero or enemy in the messages.  Should be unique.
-Present Health: How much health the hero or enemy has.  When a hero or enemy gets to or below 0 they are dead and cannot do anything else.
-Max Health: The max amount of health a hero or enemy has.  They should be able to heal past this (code should enforce this).
+Name: A string that is used to identify the hero or enemy in the messages. Should be unique.
+
+Present Health: How much health the hero or enemy has. When a hero or enemy gets to or below 0 they are dead and cannot do anything else.
+
+Max Health: The max amount of health a hero or enemy has.  They should not be able to heal past this (code should enforce this).
+
 Damage: How much damage a hero or enemy will do when they attack.
+
 Hit Chance: Does nothing, pretty sure was supposed to determine how likely an attack was to succeed, but didn’t put in the code for this.  Feel free to remove or use as was intended.
+
 Attack Rate: In terms of milliseconds, how often a hero or enemy can attack someone.
+
 Heal Rate: In terms of milliseconds, how often a hero or enemy can heal damage.
+
 Action: Do Nothing (-1), Defend (0), Attack (1), or Heal (2)
  
 
