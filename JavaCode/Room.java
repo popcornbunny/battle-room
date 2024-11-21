@@ -64,12 +64,16 @@ public class Room extends Thread
 	}
 
   //will have to rework to print to clients
-	private void printMessages()
-	{
+	private void printMessages() throws IOException {
 		while (messages.size() > 0)
 		{
-			System.out.println(messages.get(0));
-			messages.remove(0);
+			for (Entity player : players)
+			{
+				buf = messages.get(0).getBytes();
+				DatagramPacket packet = new DatagramPacket(buf, buf.length, player.getAddress(), player.getPort());
+				socket.send(packet);
+				messages.remove(0);
+			}
 		}
 	}
 	
@@ -100,61 +104,86 @@ public class Room extends Thread
 		}
 	}
 
-	public void run()
-	{
+	public void run() {
 		System.out.println("Room started.");
 		long startTime = System.currentTimeMillis();
 		long lastSpawnCheck = startTime;
 
-		// Create the socket for the server.
 		try {
+			//creates socket
 			socket = new DatagramSocket(4445);
-		} catch (SocketException e) {
+
+			//receives "join" message from client, does nothing with it
+			DatagramPacket packet = new DatagramPacket(buf, buf.length);
+			socket.receive(packet);
+
+			System.out.println("Received join message from client.");
+			InetAddress address = packet.getAddress();
+			int port = packet.getPort();
+
+			//sends confirmation message to client
+			String message = "Welcome to the Battle Room! \nYou are player " + (players.size()+1) + ".\n" +
+				"The rules are simple: You can attack, heal or defend. \nto heal, type '2', to attack, type" +
+				" '1', to defend, type '0'. \nFirst, lets create your character.";
+			buf = message.getBytes();
+			packet = new DatagramPacket(buf, buf.length, address, port);
+			socket.send(packet);
+
+			//prompts entity creation
+			message = "Please enter your name: ";
+			buf = message.getBytes();
+			packet = new DatagramPacket(buf, buf.length, address, port);
+			socket.send(packet);
+
+			//wait for response
+			socket.receive(packet);
+			String name = new String(packet.getData(), 0, packet.getLength());
+
+			//create player entity, health is increased for player
+			address = packet.getAddress();
+			port = packet.getPort();
+			Entity player = new Entity(name, address, port);
+			addPlayer(player);
+			System.out.println(player.getName() + " has entered the room.");
+
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-		while (run)
-		{
-			try
-			{
-				//receives "join" message from client, does nothing with it
-				DatagramPacket packet = new DatagramPacket(buf, buf.length);
-				socket.receive(packet);
+		messages.add("The battle has begun!\nWait for creatures to spawn.");
+		while (run) {
 
-				System.out.println("Received join message from client.");
-				InetAddress address = packet.getAddress();
-				int port = packet.getPort();
+			//main loop
 
-				//sends confirmation message to client
-				String message = "Welcome to the Battle Room!";
-				buf = message.getBytes();
-				packet = new DatagramPacket(buf, buf.length, address, port);
-				socket.send(packet);
-			}
-			catch (IOException e)
-			{
+			try {
+				printMessages();
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
 			presentTime = System.currentTimeMillis();
-			if ((presentTime - lastSpawnCheck) > check_spawn)
-			{
+			if ((presentTime - lastSpawnCheck) > check_spawn) {
 				double check = Math.random();
-				if (spawn_chance > check)
-				{
-					Entity creature = new Entity("Creature"+creatureID,100,100,10,0.6,1000,5000);
+				if (spawn_chance > check) {
+					Entity creature = new Entity("Creature" + creatureID, 100, 100, 10, 0.6, 1000, 5000);
 					creatures.add(creature);
-					messages.add(creature.getName()+" has entered the room.");
+					messages.add(creature.getName() + " has entered the room.");
 					creatureID++;
 				}
 				lastSpawnCheck = presentTime;
 			}
 
-			processActions(players,creatures);
-			processActions(creatures,players);
+			//get player moves
+
+			processActions(players, creatures);
+			processActions(creatures, players);
 
 			updateCreatureAction();
-			printMessages();
+
+			try {
+				printMessages();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		socket.close();
 	}

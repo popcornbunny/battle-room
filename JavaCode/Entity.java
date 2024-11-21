@@ -2,9 +2,14 @@ package JavaCode;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Scanner;
 
 public class Entity
 {
+	//player specific address and port varibales
+	private InetAddress address;
+	private int port;
+
 	private String name = "None";
 	private int health = 100;
 	private int max_health = 100;
@@ -44,6 +49,25 @@ public class Entity
 		heal_rate = hr;
 		start_time = System.currentTimeMillis();
 	}
+
+	//player specific constructor
+	public Entity(String n, InetAddress address, int port)
+	{
+		name = n;
+		this.address = address;
+		this.port = port;
+		health = 200;
+		max_health = 200;
+		damage = 10;
+		hit_chance = 0.6;
+		attack_rate = 1000;
+		heal_rate = 5000;
+		start_time = System.currentTimeMillis();
+	}
+
+	public InetAddress getAddress(){ return address; }
+
+	public int getPort(){ return port; }
 	
 	public int getAction()
 	{
@@ -136,9 +160,49 @@ public class Entity
 		socket.send(packet);
 
 		//receives confirmation message from server
+		buf = new byte[1024];
 		packet = new DatagramPacket(buf, buf.length);
 		socket.receive(packet);
 		String received = new String(packet.getData(), 0, packet.getLength());
 		System.out.println(received);
+
+		//receievs name prompt from the server
+		packet = new DatagramPacket(buf, buf.length);
+		socket.receive(packet);
+		received = new String(packet.getData(), 0, packet.getLength());
+		System.out.println(received);
+
+		//sends name to the server
+		Scanner scanner = new Scanner(System.in);
+		String name = scanner.nextLine();
+		buf = name.getBytes();
+		packet = new DatagramPacket(buf, buf.length, address, 4445);
+		socket.send(packet);
+
+		//receives entity creation message from server
+		buf = new byte[256];
+		packet = new DatagramPacket(buf, buf.length);
+		socket.receive(packet);
+		received = new String(packet.getData(), 0, packet.getLength());
+		System.out.println(received);
+
+		//main game loop
+		String action = "";
+		int msg_count = 0;
+		while(!(action.equals("quit")))
+		{
+			//receives game state from server
+			buf = new byte[256];
+			packet = new DatagramPacket(buf, buf.length);
+			socket.receive(packet);
+			received = new String(packet.getData(), 0, packet.getLength());
+			System.out.println(received);
+
+			//sends action to server
+			action = scanner.nextLine();
+			buf = action.getBytes();
+			packet = new DatagramPacket(buf, buf.length, address, 4445);
+			socket.send(packet);
+		}
 	}
 }
