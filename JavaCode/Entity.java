@@ -2,6 +2,7 @@ package JavaCode;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class Entity
@@ -179,30 +180,42 @@ public class Entity
 		packet = new DatagramPacket(buf, buf.length, address, 4445);
 		socket.send(packet);
 
-		//receives entity creation message from server
-		buf = new byte[256];
-		packet = new DatagramPacket(buf, buf.length);
-		socket.receive(packet);
-		received = new String(packet.getData(), 0, packet.getLength());
-		System.out.println(received);
-
 		//main game loop
-		String action = "";
+		String action = "-1";
 		int msg_count = 0;
-		while(!(action.equals("quit")))
-		{
-			//receives game state from server
-			buf = new byte[256];
-			packet = new DatagramPacket(buf, buf.length);
-			socket.receive(packet);
-			received = new String(packet.getData(), 0, packet.getLength());
-			System.out.println(received);
+		while (true) {
+			try {
+				// Receives game messages from server
+				buf = new byte[1024];
+				packet = new DatagramPacket(buf, buf.length);
+				socket.receive(packet);
+				received = new String(packet.getData(), 0, packet.getLength());
+				System.out.println(received);
 
-			//sends action to server
-			action = scanner.nextLine();
-			buf = action.getBytes();
-			packet = new DatagramPacket(buf, buf.length, address, 4445);
-			socket.send(packet);
+				//receives action prompt from server
+				buf = new byte[1024];
+				packet = new DatagramPacket(buf, buf.length);
+				socket.receive(packet);
+				received = new String(packet.getData(), 0, packet.getLength());
+				System.out.println(received);
+
+				// Sends action to server
+				msg_count++;
+				action = scanner.nextLine();
+				if (action.equals("exit")) {
+					System.out.println("Exiting game...");
+					socket.close();
+					break;
+				}
+				action = action + " " + msg_count;
+				buf = action.getBytes();
+				packet = new DatagramPacket(buf, buf.length, address, 4445);
+				System.out.println("Sending action: " + action);
+				socket.send(packet);
+
+			} catch (IOException e) {
+				System.out.println("Error: " + e.getMessage());
+			}
 		}
 	}
 }
