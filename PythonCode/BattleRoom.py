@@ -1,10 +1,13 @@
 import time
 import random
+import socket
 
 def currentTimeMillis():
     return int(round(time.time()*1000))
 
 class Entity:
+    __address = ""
+    __port = 0
     __name = "None"
     __health = 100
     __max_health = 100
@@ -36,6 +39,25 @@ class Entity:
         self.__attack_rate = int(ar)
         self.__heal_rate = int(hr)
         self.__start_time = currentTimeMillis()
+
+    # For player creation
+    def __init__(self, n, addr, port):
+        self.__name = str(n)
+        self.__address = addr
+        self.__port = port
+        self.__health = 200
+        self.__max_health = 200
+        self.__damage = 10
+        self.__hit_chance = 0.6
+        self.__attack_rate = 1000
+        self.__heal_rate = 5000
+        self.__start_time = currentTimeMillis()
+
+    def getAddress(self):
+        return self.__address
+
+    def getPort(self):
+        return self.__port
 
     def getAction(self):
         return self.__action
@@ -178,6 +200,7 @@ def createRoom(spawn_chance, check_spawn):
 
 def runGame(room):
     global run
+    print("Room started.")
     startTime = currentTimeMillis()
     lastSpawnCheck = startTime
     while run:
