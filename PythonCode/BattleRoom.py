@@ -1,6 +1,5 @@
 import time
 import random
-import socket
 
 def currentTimeMillis():
     return int(round(time.time()*1000))
@@ -29,7 +28,33 @@ class Entity:
     #  2 : Heal (5 health, only once per heal_rate)
     __action = -1  # Ideally would have an enum for this
 
-
+# Made new constructor because Python does not allow for multiple constructors
+    def __init__(self, n, addr=None, port=None, h=None, mh=None, d=None, hc=None, ar=None, hr=None):
+        self.__name = str(n)
+        if addr is not None:
+            self.__address = addr
+        if port is not None:
+            self.__port = port
+        if h is None:
+            h = 200
+        if mh is None:
+            mh = 200
+        if d is None:
+            d = 10
+        if hc is None:
+            hc = 0.6
+        if ar is None:
+            ar = 1000
+        if hr is None:
+            hr = 5000
+        self.__health = int(h)
+        self.__max_health = int(mh)
+        self.__damage = int(d)
+        self.__hit_chance = float(hc)
+        self.__attack_rate = int(ar)
+        self.__heal_rate = int(hr)
+        self.__start_time = currentTimeMillis()
+    '''
     def __init__(self, n, h, mh, d, hc, ar, hr):
         self.__name = str(n)
         self.__health = int(h)
@@ -51,7 +76,7 @@ class Entity:
         self.__hit_chance = 0.6
         self.__attack_rate = 1000
         self.__heal_rate = 5000
-        self.__start_time = currentTimeMillis()
+        self.__start_time = currentTimeMillis()'''
 
     def getAddress(self):
         return self.__address

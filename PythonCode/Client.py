@@ -16,16 +16,26 @@ def runClient(host, port):
         print("Connected to server at " + host + " on port " + str(port))
         msg = s.recvfrom(1024)
         msg = msg[0].decode()
-        while "quit" not in msg:  # End of game
+        while True:
+            action = -1
+            msgCount = 0
             if msg is not None:
+                msgCount += 1
                 print(msg)
-            else:
+            '''else:
                 print("Goodbye!")
                 s.close()
-                break
+                break'''
             if "enter move: " in msg:  # Send move
                 move = input()
-                s.sendto(move.encode(), (host, port))
+                if move == "exit":
+                    print("Exiting game...")
+                    s.sendto(move.encode(), (host, port))
+                    s.close()
+                    break
+                action = move + " " + str(msgCount)
+                s.sendto(action.encode(), (host, port))
+                print("Sending action:", action)
             if "Please enter your name: " in msg:  # Send after confirmation
                 s.sendto(input().encode(), (host, port))
 
