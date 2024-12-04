@@ -108,6 +108,16 @@ class Entity:
     def getName(self):
         return self.__name
 
+    def getActionName(self):
+        if self.__action == 0:
+            return "Defend"
+        elif self.__action == 1:
+            return "Attack"
+        elif self.__action == 2:
+            return "Heal"
+        else:
+            return "Do Nothing"
+
     def heal(self, time):
         self.__health += 5
         if self.__health > self.__max_health:
@@ -173,7 +183,7 @@ class Room:
         if (self.__presentTime - lastSpawnCheck) > self.__check_spawn:
             check = random.random()
             if self.__spawn_chance > check:
-                creature = Entity("Creature"+str(self.__creatureID), 100, 100, 10, 0.6, 1000, 5000)
+                creature = Entity("Creature"+str(self.__creatureID), "", "", 100, 100, 10, 0.6, 1000, 5000)
                 self.addCreature(creature)
                 self.__creatureID += 1
             lastSpawnCheck = self.__presentTime

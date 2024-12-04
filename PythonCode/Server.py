@@ -1,5 +1,9 @@
-# Server
+##############################################
+# Author: Katelyn Hanft
+# Server side of the Battle Room game
+##############################################
 
+import threading
 import socket
 import BattleRoom
 
@@ -34,20 +38,13 @@ def playerJoin(sock, addr, num):
     msg = "Please enter your name: "
     sock.sendto(msg.encode(), addr)
     msg, addr = sock.recvfrom(1024)
-    p = sock.getsockname()[1]
+    #p = sock.getsockname()[1]
 
     # Adds player to room
-    player = BattleRoom.Entity(msg.decode(), addr, p)
+    player = BattleRoom.Entity(msg.decode(), addr[0], addr[1])
     print(msg.decode(), "has joined the game.")
-    logMove(msg.decode() + "joined the game. (IP/port: " + addr + ")")
+    logMove(msg.decode() + " joined the game. (IP/port: " + str(addr) + ")")
     return player
-
-# The main code for playing the game
-def playGame(room):
-    # Spawns creatures and fights
-    BattleRoom.runGame(room)
-
-
 
 
 def run():
@@ -55,20 +52,40 @@ def run():
     clearLog()
     # Starts the room
     port = int(input("Please enter the port number: "))
-    room = BattleRoom.createRoom(0.05, 1000)
-    #BattleRoom.runGame(room)
+    room = BattleRoom.createRoom(0.5, 1000)
+
     logMove("Room started.")
     # Socket creation
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as ss:
         ss.bind((host, port))
         print("Server started on IP", socket.gethostbyname(socket.gethostname()), "with port", port)
-        playGame(room)
+        thread = threading.Thread(target=BattleRoom.runGame, args=(room,), daemon=True)
+        thread.start()
+        # waits for first client to join
+        msg, addr = ss.recvfrom(1024)
         while True:
-            msg, addr = ss.recvfrom(1024)
-            if msg.decode() == "join":
-                numPlayers += 1
-                player = playerJoin(ss, addr, numPlayers)
-                room.addPlayer(player)
+            if msg is not None:
+                if msg.decode() == "join":  # New client
+                    numPlayers += 1
+                    player = playerJoin(ss, addr, numPlayers)
+                    room.addPlayer(player)
+                elif msg.decode() == "exit":  # Existing client leaves
+                    print(player.getName() + " has left the game.")
+                    logMove(player.getName() + " has left the game." + " (IP/port: " + str(addr) + ")")
+                    room._Room__players.remove(player)
+                    numPlayers -= 1
+                    msg = None
+                    continue
+                for player in room._Room__players:  # Loop for each player
+                    addr = (player.getAddress(), player.getPort())
+                    ss.sendto("Enter your move (0: Defend, 1: Attack, 2: Heal): ".encode(), addr)
+                    msg, addr = ss.recvfrom(1024)
+                    move = msg.decode().strip()
+                    if move[0] in ["0", "1", "2"]:
+                        player.setAction(int(move[0]))
+                        BattleRoom.Room._Room__messages.append(move[2] + ": " + player.getName() + " chose to " + player.getActionName())
+                        logMove(player.getName() + " chose to " + player.getActionName() + " (IP/port From: " + str(addr) + "), " + "(IP/port To: " + str(host) + ", " + str(port) + ");" + " Message number: " + move[2])
+
 
 def main():
     run()
