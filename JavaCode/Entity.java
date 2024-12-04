@@ -5,6 +5,13 @@ import java.net.*;
 import java.util.Arrays;
 import java.util.Scanner;
 
+/**
+ * This class represents an entity in the game. It can be a player or a creature.
+ * It functions as a client that connects to the room.
+ * @author cdgira
+ * Client functionality added by Nolan Dermigny
+ */
+
 public class Entity {
 	//player specific address and port varibales
 	private InetAddress address;

@@ -3,15 +3,14 @@ package JavaCode;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Iterator;
+
 
 /**
  * There should only be one of these running as a server and players should connect to it as clients.
  * @author cdgira
- *
+ * Server functionality added by Nolan Dermigny
  */
 public class Room extends Thread
 {
