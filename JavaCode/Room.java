@@ -1,5 +1,8 @@
 package JavaCode;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -117,6 +120,17 @@ public class Room extends Thread
 		System.out.println("Room started.");
 		long startTime = System.currentTimeMillis();
 		long lastSpawnCheck = startTime;
+		File file = new File("log.txt");
+		BufferedWriter b;
+		//creates log file
+		try {
+			file.createNewFile();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		//creates log file
+
 
 		/*
 		Initializes server and waits for join message from client
@@ -195,7 +209,9 @@ public class Room extends Thread
 
 				//get player moves
 				for (Entity player : players) {
+					b = new BufferedWriter(new FileWriter(file, true));
 					try {
+
 						//prompts player for move
 						System.out.println("Prompting player: " + player.getName());
 						buf = "enter move (defend 0 | attack 1 | heal 2) : ".getBytes();
@@ -205,13 +221,16 @@ public class Room extends Thread
 						//receives move from player
 						socket.receive(packet);
 						String moveData = new String(packet.getData(), 0, packet.getLength());
+						b.write("move: "+moveData+"	IPFrom: "	+player.getAddress()+" IPTo: "+packet.getAddress()+"\n");
 						System.out.println("Received move from " + player.getName() + ": " + moveData);
 						int move = Integer.parseInt(moveData.split(" ")[0]);
 						player.setAction(move);
 
+
 					} catch (IOException e) {
 						System.out.println("Error while handling player " + player.getName() + ": " + e.getMessage());
 					}
+					b.close();
 				}
 
 				//processes player and creature actions
@@ -225,6 +244,7 @@ public class Room extends Thread
 			e.printStackTrace();
 		}
 		socket.close();
+
 	}
 
 	//sends a message directly to a player
